@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:checkstudent/states/authen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+Future<void> main() async {
   HttpOverrides.global = MyHttpOverride();
 
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp().then((value) {
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {

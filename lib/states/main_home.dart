@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, avoid_print
 
+import 'package:checkstudent/models/banner_model.dart';
 import 'package:checkstudent/models/gs_model.dart';
 import 'package:checkstudent/models/hrnu_model.dart';
 import 'package:checkstudent/models/reg_model.dart';
@@ -9,6 +10,7 @@ import 'package:checkstudent/widgets/widget_button.dart';
 import 'package:checkstudent/widgets/widget_form.dart';
 import 'package:checkstudent/widgets/widget_progress.dart';
 import 'package:checkstudent/widgets/widget_text.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -40,20 +42,28 @@ class _MainHomeState extends State<MainHome> {
 
   String? totalPercene;
 
+  var bannerModels = <BannerModel>[];
+
   @override
   void initState() {
     super.initState();
     token = widget.token;
-    print('token ===> $token');
+    readDataBanner();
+  }
+
+  Future<void> readDataBanner() async {
+    await FirebaseFirestore.instance.collection('banner').get().then((value) {
+      for (var element in value.docs) {
+        BannerModel bannerModel = BannerModel.fromMap(element.data());
+        bannerModels.add(bannerModel);
+      }
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: MyConstant.primary,
-      //   foregroundColor: MyConstant.button,
-      // ),
       body: SafeArea(
         child: LayoutBuilder(builder: (context, BoxConstraints boxConstraints) {
           return GestureDetector(
@@ -67,7 +77,9 @@ class _MainHomeState extends State<MainHome> {
               child: Column(
                 children: [
                   contentSearch(boxConstraints, context),
-                  showStudent(boxConstraints: boxConstraints),
+                  regModel == null
+                      ? showBanner()
+                      : showStudent(boxConstraints: boxConstraints),
                 ],
               ),
             ),
@@ -75,6 +87,10 @@ class _MainHomeState extends State<MainHome> {
         }),
       ),
     );
+  }
+
+  Widget showBanner() {
+    return bannerModels.isEmpty ? const WidgetProgress() : WidgetText(text: 'Banner') ;
   }
 
   Expanded showStudent({required BoxConstraints boxConstraints}) {

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "406936759139",
+    "project_id": "checkstudent-cc2b3",
+    "storage_bucket": "checkstudent-cc2b3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406936759139:android:4ec6087d099ccc692f8156",
+        "android_client_info": {
+          "package_name": "com.flutterthailand.checkstudent"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "406936759139-hl0ic8k698vmdro16ibpms1pldkmojh7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEZop0fxce4wTQohiY9dN0Pk4kZ2WbFWM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "406936759139-hl0ic8k698vmdro16ibpms1pldkmojh7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
