@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, avoid_print
+
 import 'package:checkstudent/models/gs_model.dart';
 import 'package:checkstudent/models/hrnu_model.dart';
 import 'package:checkstudent/models/reg_model.dart';
@@ -10,6 +11,7 @@ import 'package:checkstudent/widgets/widget_progress.dart';
 import 'package:checkstudent/widgets/widget_text.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 class MainHome extends StatefulWidget {
@@ -33,6 +35,11 @@ class _MainHomeState extends State<MainHome> {
 
   bool load = false;
 
+  Map<String, double> graphMap = {};
+  Map<String, String> mapString = {};
+
+  String? totalPercene;
+
   @override
   void initState() {
     super.initState();
@@ -43,42 +50,44 @@ class _MainHomeState extends State<MainHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: MyConstant.primary,
-        foregroundColor: MyConstant.button,
-      ),
-      body: LayoutBuilder(builder: (context, BoxConstraints boxConstraints) {
-        return GestureDetector(
-          onTap: () {
-            print('You Tap');
-            FocusScope.of(context).requestFocus(FocusScopeNode());
-          },
-          child: SizedBox(
-            width: boxConstraints.maxWidth,
-            height: boxConstraints.maxHeight,
-            child: Column(
-              children: [
-                contentSearch(boxConstraints, context),
-                showStudent(),
-              ],
+      // appBar: AppBar(
+      //   backgroundColor: MyConstant.primary,
+      //   foregroundColor: MyConstant.button,
+      // ),
+      body: SafeArea(
+        child: LayoutBuilder(builder: (context, BoxConstraints boxConstraints) {
+          return GestureDetector(
+            onTap: () {
+              print('You Tap');
+              FocusScope.of(context).requestFocus(FocusScopeNode());
+            },
+            child: SizedBox(
+              width: boxConstraints.maxWidth,
+              height: boxConstraints.maxHeight,
+              child: Column(
+                children: [
+                  contentSearch(boxConstraints, context),
+                  showStudent(boxConstraints: boxConstraints),
+                ],
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
-  Expanded showStudent() {
+  Expanded showStudent({required BoxConstraints boxConstraints}) {
     return Expanded(
       child: load
           ? const WidgetProgress()
           : regModel == null
               ? const SizedBox()
-              : contentResult(),
+              : contentResult(boxConstraints: boxConstraints),
     );
   }
 
-  Widget contentResult() {
+  Widget contentResult({required BoxConstraints boxConstraints}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: ListView(
@@ -86,22 +95,31 @@ class _MainHomeState extends State<MainHome> {
           studentInfomation(),
           advisorInfomation(),
           advisor2Infomation(),
-          showPieGraph(),
+          showPieGraph(boxConstraints: boxConstraints),
         ],
       ),
     );
   }
 
-  Container showPieGraph() {
-    Map<String, double> map = {};
-    map['Doramon'] = 5;
-    map['Nopita'] = 10;
-    map['Sunako'] = 15;
-
+  Container showPieGraph({required BoxConstraints boxConstraints}) {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 32),
       child: PieChart(
-        dataMap: map,
-        // chartType: ChartType.ring,
+        legendOptions: const LegendOptions(
+          legendShape: BoxShape.rectangle,
+          legendPosition: LegendPosition.bottom,
+        ),
+        legendLabels: mapString,
+        chartValuesOptions: const ChartValuesOptions(
+          showChartValuesInPercentage: true,
+          showChartValuesOutside: true,
+        ),
+        totalValue: 6,
+        centerText: totalPercene,
+        dataMap: graphMap,
+        chartType: ChartType.ring,
+        ringStrokeWidth: 85,
+        chartRadius: boxConstraints.maxWidth * 0.5,
       ),
     );
   }
@@ -239,6 +257,7 @@ class _MainHomeState extends State<MainHome> {
   }
 
   Future<void> processSearch() async {
+    total = 0.0;
     load = true;
     setState(() {});
 
@@ -249,6 +268,7 @@ class _MainHomeState extends State<MainHome> {
     map['studentcode'] = search;
 
     Dio dio = Dio();
+    dio.options.headers['User-agent'] = 'app_dart';
     dio.options.headers['Authorization'] = 'JWT $token';
     dio.options.headers['content-Type'] = 'application/x-www-form-urlencoded';
 
@@ -265,7 +285,32 @@ class _MainHomeState extends State<MainHome> {
         gsModel = GsModel.fromMap(element);
       }
 
-      print('gsModel ==> ${gsModel!.toMap()}');
+      print('##24sep gsModel ==> ${gsModel!.toMap()}');
+      graphMap['อบรมจริยธรรม'] = calculateScore(string: gsModel!.ethics_date);
+      graphMap['แต่งตั้งที่ปรึกษา'] =
+          calculateScore(string: gsModel!.student_assign_date);
+      graphMap['ประกาศทำวิจัย'] = calculateScore(string: gsModel!.permit_date);
+      graphMap['ตีพิมพ์ผลงาน'] =
+          calculateScore(string: gsModel!.publication_date);
+      graphMap['สอนจบ'] = calculateScore(string: gsModel!.exam_date);
+      graphMap['ส่งเล่ม'] =
+          calculateScore(string: gsModel!.thesiscomplete_date);
+
+      double perceneDou = (total / 6) * 100;
+      print('##24sep perceneDou ==> $perceneDou');
+
+      NumberFormat numberFormat = NumberFormat('#00.00', 'en_US');
+      totalPercene = numberFormat.format(perceneDou);
+      totalPercene = '$totalPercene %';
+
+      mapString['อบรมจริยธรรม'] = 'อบรมจริยธรรม (${graphMap['อบรมจริยธรรม']})';
+      mapString['แต่งตั้งที่ปรึกษา'] =
+          'แต่งตั้งที่ปรึกษา (${graphMap['แต่งตั้งที่ปรึกษา']})';
+      mapString['ประกาศทำวิจัย'] =
+          'ประกาศทำวิจัย (${graphMap['ประกาศทำวิจัย']})';
+      mapString['ตีพิมพ์ผลงาน'] = 'ตีพิมพ์ผลงาน (${graphMap['ตีพิมพ์ผลงาน']})';
+      mapString['สอนจบ'] = 'สอนจบ (${graphMap['สอนจบ']})';
+      mapString['ส่งเล่ม'] = 'ส่งเล่ม (${graphMap['ส่งเล่ม']})';
 
       var regResult = value.data['reg_result'];
       // print('mapReg ===> $regResult');
@@ -286,5 +331,16 @@ class _MainHomeState extends State<MainHome> {
       load = false;
       setState(() {});
     });
+  }
+
+  double total = 0.0;
+
+  double calculateScore({required String string}) {
+    double score = 1.0;
+    if (string.isEmpty) {
+      score = 0.0;
+    }
+    total = total + score;
+    return score;
   }
 }
